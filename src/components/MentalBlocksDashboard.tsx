@@ -2,15 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   User, 
-  MessageSquare, 
-  Heart, 
   Activity, 
-  Baby, 
-  Target, 
-  Scale, 
   Clipboard,
   BarChart3,
-  Brain
+  Save
 } from 'lucide-react';
 
 interface Emotion {
@@ -18,453 +13,810 @@ interface Emotion {
   valor: number;
 }
 
+
 export default function MentalBlocksDashboard() {
-  // --- State for emotions used in result section and sliders ---
-  const [emocional, setEmocional] = useState<Emotion[]>([
-    { nome: 'Medo', valor: 0 },
-    { nome: 'Ansiedade', valor: 0 },
-    { nome: 'Rejeição', valor: 0 },
-    { nome: 'Baixa autoestima', valor: 0 },
-    { nome: 'Tristeza', valor: 0 },
-    { nome: 'Raiva', valor: 0 },
-    { nome: 'Angústia', valor: 0 },
-    { nome: 'Culpa', valor: 0 },
-    { nome: 'Solidão', valor: 0 },
-    { nome: 'Abandono', valor: 0 },
-    { nome: 'Vergonha', valor: 0 },
-    { nome: 'Insegurança', valor: 0 },
-    { nome: 'Frustração', valor: 0 },
-    { nome: 'Desvalorização', valor: 0 },
-    { nome: 'Sensação de vazio', valor: 0 },
-  ]);
+  // --- State for Emotional Map ---
+  const emocoes = [
+    "REJEIÇÃO",
+    "ABANDONO",
+    "HUMILHAÇÃO",
+    "TRAIÇÃO",
+    "INJUSTIÇA",
+
+    "CULPA",
+    "VERGONHA",
+    "TRISTEZA",
+    "REVOLTA",
+    "MEDO DE PERDER O CONTROLE",
+
+    "MÁGOA",
+    "ÓDIO",
+    "ORGULHO",
+    "ANSIEDADE",
+    "EGOÍSMO",
+
+    "SUBMISSÃO",
+    "INDECISÃO",
+    "DESÂNIMO",
+    "COVARDIA",
+    "CIÚMES",
+
+    "FRUSTRAÇÃO",
+    "NOSTALGIA",
+    "CANSAÇO",
+    "IMPACIÊNCIA",
+    "ANGÚSTIA",
+
+    "TIMIDEZ",
+    "SOLIDÃO",
+    "AUTORITARISMO",
+
+    // manter anteriores
+    "MEDO",
+    "BAIXA AUTOESTIMA",
+    "RAIVA",
+    "SOBRECARGA EMOCIONAL",
+    "TRAUMA EMOCIONAL",
+    "DEPENDÊNCIA EMOCIONAL",
+    "INSEGURANÇA"
+  ];
+
+  const [emocional, setEmocional] = useState<Record<string, number>>(
+    emocoes.reduce((acc, emocao) => ({ ...acc, [emocao]: 0 }), {})
+  );
+
 
   // --- State for Client Data ---
-  const [paciente, setPaciente] = useState({
+  const [formData, setFormData] = useState({
     nome: '',
     idade: '',
-    dataNascimento: '',
-    telefone: ''
+    nascimento: '',
+    telefone: '',
+    estadoCivil: '',
+    filhos: '',
+    quantidadeFilhos: '',
+    profissao: '',
+    escolaridade: '',
+    religiao: '',
+    cidade: ''
   });
 
-  // --- State for Anamnese Text Fields ---
-  const [anamnese, setAnamnese] = useState({
-    queixaPrincipal: '',
-    vidaPessoal_familiar: '',
-    vidaPessoal_frustracoes: '',
-    vidaPessoal_felicidade: '',
-    saudeEmocional_medos: '',
-    saudeEmocional_sentimentos: '',
-    saudeEmocional_sintomas: '',
-    infancia_relacaoPais: '',
-    infancia_traumas: '',
-    infancia_magoas: '',
-    infancia_adolescencia: '',
-    infancia_fatoMarcante: '',
-    crencas_autoimagem: '',
-    crencas_negativos: '',
-    crencas_fortes: '',
-    observacoes: ''
-  });
+  // --- State for Anamnese Answers ---
+  const [respostas, setRespostas] = useState<Record<string, string>>({});
+
+  const etapasAnamnese = [
+    {
+      titulo: "QUEIXA PRINCIPAL",
+      perguntas: [
+        "O que te trouxe para a terapia?",
+        "Há quanto tempo você se sente assim?",
+        "O que mais tem machucado emocionalmente você?",
+        "Existe algo que você sente que não consegue superar?",
+        "O que você espera alcançar com a terapia?"
+      ]
+    },
+    {
+      titulo: "INFÂNCIA",
+      perguntas: [
+        "Como foi sua infância?",
+        "Você se sentia amada quando criança?",
+        "Quais lembranças mais marcaram sua infância?",
+        "Houve abandono emocional?",
+        "Sofreu críticas constantes?",
+        "Apanhava na infância?",
+        "Sentia medo dentro de casa?",
+        "Como era sua relação com sua mãe?",
+        "Como era sua relação com seu pai?",
+        "Com qual dos dois tinha mais dificuldade?",
+        "Quantos irmãos você tem?",
+        "Como era sua relação com seus irmãos?",
+        "Você se sentia ouvida?",
+        "Você se sentia protegida?",
+        "Precisou amadurecer cedo?",
+        "Sofreu bullying?",
+        "Era introvertida ou extrovertida?",
+        "Quais eram seus maiores medos?",
+        "Existe alguma dor da infância que ainda dói?",
+        "Existe algum trauma da infância que ainda te machuca?",
+        "Você já se sentiu rejeitada quando criança?",
+        "Já presenciou brigas ou violência dentro de casa?",
+        "Você se sentia acolhida emocionalmente?",
+        "Te comparavam com outras pessoas?",
+        "Você sentia necessidade de agradar para receber amor?"
+      ]
+    },
+    {
+      titulo: "ADOLESCÊNCIA E DESENVOLVIMENTO AFETIVO",
+      perguntas: [
+        "Como foi sua adolescência?",
+        "Sofreu rejeição?",
+        "Já teve depressão na adolescência?",
+        "Já pensou em desistir da vida?",
+        "Sofreu decepção amorosa?",
+        "Como era sua autoestima?",
+        "Se sentia bonita?",
+        "Tinha amigos verdadeiros?",
+        "Já sofreu humilhação?",
+        "Já se sentiu excluída?",
+        "Houve rebeldia?",
+        "Quais eram seus maiores sonhos?",
+        "O que mais marcou sua adolescência?",
+        "Existe algum trauma da adolescência?",
+        "Você escondia suas emoções?",
+        "Sentia necessidade de aceitação?",
+        "Como foram seus primeiros relacionamentos?",
+        "Você se sentia emocionalmente compreendida?",
+        "Teve alguma experiência amorosa traumática?",
+        "Você tinha medo de rejeição amorosa?",
+        "Como você descobriu sua sexualidade?",
+        "Você recebeu orientação saudável sobre sexualidade?",
+        "Como foi sua primeira experiência sexual?",
+        "Sua primeira vez foi: (Ótima / Boa / Regular / Ruim / Traumática)",
+        "Você se sentiu segura emocionalmente?",
+        "Sentiu pressão ou obrigação em algum relacionamento?",
+        "Você associa sexo com amor?",
+        "Qual a importância do sexo para você hoje?",
+        "Você consegue falar sobre sexualidade sem culpa?",
+        "Existe alguma dor emocional ligada à sexualidade?",
+        "Você sente vergonha do próprio corpo?",
+        "Existe alguma insegurança íntima que te machuca?",
+        "Você se sente respeitada emocionalmente nas relações?"
+      ]
+    },
+    {
+      titulo: "RELAÇÃO FAMILIAR",
+      perguntas: [
+        "Como é sua relação com sua mãe hoje?",
+        "Como é sua relação com seu pai hoje?",
+        "Existe mágoa familiar?",
+        "Existe alguém que você não conseguiu perdoar?",
+        "Como é sua relação com irmãos?",
+        "Você se sente pertencente à família?",
+        "Você sente que precisa agradar todos?",
+        "Você sente que carrega responsabilidades demais?",
+        "Você se sente emocionalmente compreendida pela família?",
+        "Existe afastamento familiar?",
+        "Você costuma guardar sentimentos?"
+      ]
+    },
+    {
+      titulo: "RELACIONAMENTOS",
+      perguntas: [
+        "Está em um relacionamento atualmente?",
+        "Como é sua relação com o esposo/parceiro?",
+        "Você se sente valorizada?",
+        "Existe diálogo saudável?",
+        "Já sofreu traição?",
+        "Já viveu relacionamento abusivo?",
+        "Tem medo de abandono?",
+        "Tem dificuldade de confiar?",
+        "Como está sua vida emocional hoje?",
+        "Como é sua vida sexual emocionalmente?",
+        "Você sente dependência emocional?",
+        "Você sente medo de ficar sozinha?",
+        "Existe algo no relacionamento que te machuca?"
+      ]
+    },
+    {
+      titulo: "FILHOS E MATERNIDADE",
+      perguntas: [
+        "Como é sua relação com seus filhos?",
+        "Você sente culpa na maternidade?",
+        "Sente sobrecarga emocional?",
+        "Tem medo de falhar como mãe?",
+        "Consegue demonstrar afeto facilmente?",
+        "Você sente que perdeu parte de si mesma?",
+        "Consegue cuidar de você emocionalmente?"
+      ]
+    },
+    {
+      titulo: "VIDA ESPIRITUAL",
+      perguntas: [
+        "Você acredita em Deus?",
+        "Como está sua vida espiritual?",
+        "Você frequenta igreja?",
+        "A fé ajuda emocionalmente?",
+        "Existe alguma ferida espiritual?",
+        "Já se decepcionou na igreja?",
+        "Você sente paz quando ora?",
+        "Você sente que está distante emocionalmente de Deus?"
+      ]
+    },
+    {
+      titulo: "VIDA PROFISSIONAL",
+      perguntas: [
+        "Você gosta do que faz?",
+        "Sente-se reconhecida?",
+        "O trabalho te sobrecarrega?",
+        "Você se sente incapaz às vezes?",
+        "Tem medo do futuro profissional?",
+        "Quais são seus sonhos profissionais?",
+        "Você sente ansiedade relacionada ao trabalho?",
+        "Seu trabalho afeta sua saúde emocional?"
+      ]
+    },
+    {
+      titulo: "VIDA ADULTA E TRAUMAS",
+      perguntas: [
+        "Existe algum trauma marcante da vida adulta?",
+        "O que mais te machuca hoje?",
+        "Qual emoção você mais sente?",
+        "Você costuma chorar escondido?",
+        "Tem ansiedade?",
+        "Tem crises emocionais?",
+        "Sofre com pensamentos negativos?",
+        "Se sente insuficiente?",
+        "Tem medo de rejeição?",
+        "Qual sua maior insegurança?",
+        "Qual sua maior dor atualmente?",
+        "Você sente solidão emocional?",
+        "Tem medo do futuro?",
+        "Você sente esgotamento emocional?",
+        "Já viveu perdas traumáticas?",
+        "Existe algo que ainda não conseguiu superar?"
+      ]
+    },
+    {
+      titulo: "SONHOS E FUTURO",
+      perguntas: [
+        "Quais são seus maiores sonhos?",
+        "Onde deseja estar daqui 5 anos?",
+        "O que deseja curar em você?",
+        "O que faria você se sentir completa?",
+        "O que ainda deseja viver?",
+        "Qual é sua maior esperança hoje?"
+      ]
+    }
+  ];
 
   const topEmocoes = useMemo(() => {
-    return [...emocional]
+    return Object.entries(emocional)
+      .map(([nome, valor]: [string, number]) => ({ nome, valor }))
       .sort((a, b) => b.valor - a.valor)
       .slice(0, 5);
   }, [emocional]);
 
-  const updateAnamnese = (field: keyof typeof anamnese, value: string) => {
-    setAnamnese(prev => ({ ...prev, [field]: value }));
-  };
+  const enviarWhatsApp = () => {
+    let mensagem = `🌸 *ANAMNESE TERAPÊUTICA - MISS. DAIANE* 🌸\n\n`;
 
-  const atualizarEmocao = (index: number, valor: string | number) => {
-    const novas = [...emocional];
-    novas[index].valor = Number(valor);
-    setEmocional(novas);
+    // =========================
+    // RESPOSTAS DAS PERGUNTAS
+    // =========================
+
+    Object.keys(respostas).forEach((pergunta) => {
+      mensagem += `*${pergunta}*\n${respostas[pergunta] || "Não respondeu"}\n\n`;
+    });
+
+    // =========================
+    // MAPA EMOCIONAL
+    // =========================
+
+    mensagem += `\n🧠 *MAPA EMOCIONAL*\n\n`;
+
+    Object.keys(emocional).forEach((emocao) => {
+      mensagem += `${emocao}: ${emocional[emocao]}/10\n`;
+    });
+
+    // =========================
+    // WHATSAPP
+    // =========================
+
+    const numero = "5564992726558";
+
+    const url =
+      `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+
+    // abre whatsapp
+    window.open(url, "_blank");
+
+    // alerta visual
+    alert("Suas respostas foram enviadas com sucesso 💜");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 p-4 md:p-8 font-sans selection:bg-purple-100">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-therapist-bg p-4 md:p-8 font-sans selection:bg-therapist-accent/20 relative overflow-hidden">
+      {/* Subtle paper texture overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/paper-fibers.png")' }} />
+      
+      <div className="max-w-4xl mx-auto space-y-12 relative z-10">
         
-        {/* Header content with Logo */}
+        {/* LOGO ORIGINAL */}
+        <div className="flex justify-center items-center mt-10 mb-[30px]">
+          <img
+            src="https://raw.githubusercontent.com/virginiostudiodesign/TERAPIA-EMOCIONAL/main/logo.png"
+            alt="Miss Daiane"
+            className="w-[420px] max-w-[90%] object-contain"
+          />
+        </div>
+        
+        {/* Header content card - BRANDING */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[2rem] shadow-xl shadow-purple-200/50 p-8 md:p-10 flex flex-col items-center gap-6"
+          transition={{ delay: 0.1 }}
+          className="bg-therapist-card rounded-[2.5rem] shadow-xl shadow-therapist-primary/5 p-12 flex flex-col items-center gap-8 border border-therapist-border overflow-hidden relative"
         >
-          <div className="flex flex-col items-center text-center space-y-4">
-            {/* Logo placeholder - User should upload logo.png to the root of the project */}
-            <div className="relative group cursor-pointer">
-              <img 
-                src="/logo.png" 
-                alt="Miss. Daiane - Terapeuta Emocional" 
-                className="h-80 w-auto object-contain transition-transform group-hover:scale-105"
-                onError={(e) => {
-                  // Fallback if logo is missing
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent && !parent.querySelector('.fallback-logo')) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'fallback-logo bg-purple-600 p-4 rounded-2xl text-white flex items-center justify-center';
-                    fallback.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brain"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .52 8.12 3 3 0 1 0 5.168-3.015L12 11.5l2.835 4.498a3 3 0 1 0 5.168 3.015 4 4 0 0 0 .52-8.12 4 4 0 0 0-2.526-5.77A3 3 0 1 0 12 5z"/><path d="M9 14.5a3 3 0 0 1-5.997.125"/><path d="M15 14.5a3 3 0 0 0 5.997.125"/><path d="M12 9v2.5"/></svg>';
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
-            </div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-therapist-primary/5 rounded-bl-full" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-therapist-secondary/5 rounded-tr-full" />
 
-            <div className="space-y-1">
-              <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">
-                Painel <span className="text-purple-600">Emocional</span>
-              </h1>
-              <p className="text-slate-500 text-lg font-medium max-w-md mx-auto">
-                Anamnese emocional e diagnóstico terapêutico TRG
-              </p>
+          <div className="flex flex-col items-center text-center space-y-6 relative">
+            <h1 className="text-therapist-title text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.4em] leading-tight max-w-5xl">
+              Protocolo de Avaliação Terapêutica
+            </h1>
+            <div className="flex items-center gap-6 py-2">
+              <div className="h-px w-16 bg-therapist-accent/20" />
+              <p className="text-therapist-accent text-sm font-black uppercase tracking-[0.5em]">Miss. Daiane</p>
+              <div className="h-px w-16 bg-therapist-accent/20" />
             </div>
           </div>
           
-          <div className="w-full h-px bg-slate-100 hidden md:block" />
-
-          <div className="flex items-center gap-6 w-full justify-center md:justify-between px-4">
-            <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex-1 justify-center md:justify-start">
-              <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status da Sessão</p>
-                <p className="text-sm font-bold text-green-600">Em Avaliação Individual</p>
+          <div className="w-full flex flex-wrap items-center gap-8 justify-center border-t border-therapist-border pt-8 px-4">
+            <div className="flex items-center gap-4 bg-white/40 p-4 rounded-3xl border border-therapist-input-border backdrop-blur-sm">
+              <div className="w-10 h-10 bg-therapist-primary/10 rounded-full flex items-center justify-center text-therapist-primary">
+                <Activity size={20} />
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shrink-0">
-                <Activity />
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-therapist-accent opacity-70">Documento</p>
+                <p className="text-xs font-bold text-therapist-title">Avaliação Individualizada</p>
               </div>
             </div>
             
-            <div className="hidden lg:flex flex-col text-right">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Especialista</p>
-              <p className="text-sm font-bold text-slate-700 italic">Miss. Daiane</p>
+            <div className="flex items-center gap-4 bg-white/40 p-4 rounded-3xl border border-therapist-input-border backdrop-blur-sm">
+              <div className="w-10 h-10 bg-therapist-secondary/10 rounded-full flex items-center justify-center text-therapist-secondary">
+                <User size={20} />
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-therapist-accent opacity-70">Responsável</p>
+                <p className="text-xs font-bold text-therapist-title">Terapeuta Miss. Daiane</p>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Sidebar / Top Section (Basic Data) */}
-          <div className="lg:col-span-1 space-y-8">
-            
-            {/* Dados do Cliente */}
-            <motion.div 
-              id="cliente-dados"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-[2rem] shadow-lg shadow-purple-100/50 p-8 border border-white/50"
+        {/* Main Content Sections */}
+        <div className="space-y-10">
+          
+          {/* =========================
+            IDENTIFICAÇÃO INICIAL
+          ========================= */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[30px] p-8 shadow-lg border border-[#E8D8CF] mb-10">
+            <h2
+              style={{
+                color: "#9B7B6B",
+                fontSize: "32px",
+                fontWeight: "700",
+                letterSpacing: "2px",
+                marginBottom: "10px",
+                textTransform: "uppercase"
+              }}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <User className="text-purple-600" size={24} />
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Dados do Cliente</h2>
+              Dados Iniciais
+            </h2>
+
+            <p
+              style={{
+                color: "#B79D8F",
+                marginBottom: "35px",
+                fontSize: "15px"
+              }}
+            >
+              Preencha suas informações para iniciar sua avaliação emocional.
+            </p>
+
+            {/* NOME */}
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Nome Completo</label>
+                <input
+                  type="text"
+                  placeholder="Seu nome"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
               </div>
 
-              <div className="space-y-5">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                  <input
-                    type="text"
-                    value={paciente.nome}
-                    onChange={(e) => setPaciente({...paciente, nome: e.target.value})}
-                    placeholder="Nome do cliente"
-                    className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Idade</label>
-                  <input
-                    type="number"
-                    value={paciente.idade}
-                    onChange={(e) => setPaciente({...paciente, idade: e.target.value})}
-                    placeholder="Ex: 34"
-                    className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all"
-                  />
-                </div>
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Cidade</label>
+                <input
+                  type="text"
+                  placeholder="Sua cidade"
+                  value={formData.cidade}
+                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
               </div>
-            </motion.div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Nascimento</label>
+                <input
+                  type="date"
+                  value={formData.nascimento}
+                  onChange={(e) => setFormData({ ...formData, nascimento: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Idade</label>
+                <input
+                  type="number"
+                  placeholder="Sua idade"
+                  value={formData.idade}
+                  onChange={(e) => setFormData({ ...formData, idade: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">WhatsApp</label>
+                <input
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Estado Civil</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Solteira, Casada..."
+                  value={formData.estadoCivil}
+                  onChange={(e) => setFormData({ ...formData, estadoCivil: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Religião</label>
+                <input
+                  type="text"
+                  placeholder="Sua religião"
+                  value={formData.religiao}
+                  onChange={(e) => setFormData({ ...formData, religiao: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Possui Filhos?</label>
+                <input
+                  type="text"
+                  placeholder="Sim / Não"
+                  value={formData.filhos}
+                  onChange={(e) => setFormData({ ...formData, filhos: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Quantos Filhos?</label>
+                <input
+                  type="text"
+                  placeholder="Quantidade"
+                  value={formData.quantidadeFilhos}
+                  onChange={(e) => setFormData({ ...formData, quantidadeFilhos: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Profissão</label>
+                <input
+                  type="text"
+                  placeholder="Sua profissão"
+                  value={formData.profissao}
+                  onChange={(e) => setFormData({ ...formData, profissao: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-[#8D6E63] font-semibold">Escolaridade</label>
+                <input
+                  type="text"
+                  placeholder="Grau de instrução"
+                  value={formData.escolaridade}
+                  onChange={(e) => setFormData({ ...formData, escolaridade: e.target.value })}
+                  style={{ width: "100%", padding: "18px", borderRadius: "16px", border: "1px solid #E6D6CC", background: "#FFFDFB", fontSize: "16px", outline: "none" }}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Main Content (Anamnese) */}
-          <div className="lg:col-span-2 space-y-8">
-            <motion.div 
+          {/* =========================
+            RENDERIZAÇÃO DAS ETAPAS
+          ========================= */}
+          {etapasAnamnese.map((etapa, etapaIndex) => (
+            <motion.div
+              key={etapaIndex}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2.5rem] shadow-xl shadow-purple-100/30 p-8 md:p-12 border border-white/50"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              style={{
+                background: "#FFFDFB",
+                padding: "35px",
+                borderRadius: "30px",
+                marginBottom: "35px",
+                border: "1px solid #E9D8CF",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.05)"
+              }}
             >
-              <div className="flex items-center justify-between mb-10 border-b border-slate-50 pb-6">
-                <h2 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Anamnese Terapêutica TRG</h2>
-                <div className="hidden sm:block text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-50 px-4 py-2 rounded-full">Protocolo 2026.04</div>
-              </div>
+              <h2
+                style={{
+                  color: "#9B7B6B",
+                  fontSize: "30px",
+                  fontWeight: "700",
+                  marginBottom: "10px",
+                  letterSpacing: "2px"
+                }}
+              >
+                {etapa.titulo}
+              </h2>
 
-              {/* Resultado Emocional / Gráfico */}
-              <section id="resultado-emocional" className="mb-16 space-y-8">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="text-purple-600" size={32} />
-                  <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Resultado Emocional</h2>
-                </div>
+              <div
+                style={{
+                  width: "80px",
+                  height: "4px",
+                  background: "#D6B7A7",
+                  borderRadius: "10px",
+                  marginBottom: "30px"
+                }}
+              />
 
-                <div className="space-y-6 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
-                  {topEmocoes.map((emocao, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex justify-between items-end px-1">
-                        <span className="font-bold text-slate-700">{emocao.nome}</span>
-                        <span className="text-purple-600 font-black">{emocao.valor}/10</span>
-                      </div>
-                      <div className="h-5 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${emocao.valor * 10}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1, delay: 0.1 * index }}
-                          className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 rounded-full"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  <div className="pt-4 text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Gráfico de Intensidade Emocional</p>
-                  </div>
-                </div>
-              </section>
+              {etapa.perguntas.map((pergunta, perguntaIndex) => (
+                <div
+                  key={perguntaIndex}
+                  style={{
+                    marginBottom: "25px"
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "10px",
+                      color: "#7F6658",
+                      fontWeight: "600",
+                      fontSize: "16px"
+                    }}
+                  >
+                    {pergunta}
+                  </label>
 
-              <div className="space-y-12">
-                {/* Dados Pessoais Expandido */}
-                <section className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-purple-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-purple-700">Dados Pessoais</h3>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input 
-                      type="text" 
-                      placeholder="Nome completo" 
-                      value={paciente.nome}
-                      onChange={(e) => setPaciente({...paciente, nome: e.target.value})}
-                      className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all" 
-                    />
-                    <input 
-                      type="number" 
-                      placeholder="Idade" 
-                      value={paciente.idade}
-                      onChange={(e) => setPaciente({...paciente, idade: e.target.value})}
-                      className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all" 
-                    />
-                    <input 
-                      type="date" 
-                      value={paciente.dataNascimento}
-                      onChange={(e) => setPaciente({...paciente, dataNascimento: e.target.value})}
-                      className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all text-slate-500" 
-                    />
-                    <input 
-                      type="text" 
-                      placeholder="Telefone / WhatsApp" 
-                      value={paciente.telefone}
-                      onChange={(e) => setPaciente({...paciente, telefone: e.target.value})}
-                      className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all" 
-                    />
-                  </div>
-                </section>
-
-                {/* Queixa Principal */}
-                <section id="queixa-principal" className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-purple-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-purple-700">Queixa Principal</h3>
-                  </div>
                   <textarea
-                    placeholder="O que trouxe você para terapia? Descreva os principais incômodos..."
-                    value={anamnese.queixaPrincipal}
-                    onChange={(e) => updateAnamnese('queixaPrincipal', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] p-6 min-h-[160px] text-slate-700 font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all resize-none"
+                    rows={4}
+                    placeholder="Digite sua resposta..."
+                    value={respostas[pergunta] || ""}
+                    onChange={(e) =>
+                      setRespostas({
+                        ...respostas,
+                        [pergunta]: e.target.value
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "18px",
+                      borderRadius: "18px",
+                      border: "1px solid #E8D8CF",
+                      background: "#FFFCFA",
+                      resize: "vertical",
+                      fontSize: "15px",
+                      color: "#5F4B42",
+                      outline: "none",
+                      lineHeight: "1.6",
+                      boxShadow: "0 3px 10px rgba(0,0,0,0.03)"
+                    }}
                   />
-                </section>
-
-                {/* Vida Pessoal */}
-                <section id="vida-pessoal" className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-purple-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-purple-700">Vida Pessoal</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Dinâmica Familiar</label>
-                      <textarea 
-                        placeholder="Como você se sente dentro da sua casa e no contexto familiar?" 
-                        value={anamnese.vidaPessoal_familiar}
-                        onChange={(e) => updateAnamnese('vidaPessoal_familiar', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all" 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Frustrações e Padrões</label>
-                      <textarea 
-                        placeholder="Existe alguma frustração em relação aos pais, casamento, filhos ou profissão?" 
-                        value={anamnese.vidaPessoal_frustracoes}
-                        onChange={(e) => updateAnamnese('vidaPessoal_frustracoes', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all" 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Felicidade e Identidade</label>
-                      <textarea 
-                        placeholder="Você se considera feliz? O que gostaria de mudar em você hoje?" 
-                        value={anamnese.vidaPessoal_felicidade}
-                        onChange={(e) => updateAnamnese('vidaPessoal_felicidade', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-purple-200 outline-none transition-all" 
-                      />
-                    </div>
-                  </div>
-                </section>
-
-                {/* Saúde Emocional */}
-                <section id="saude-emocional" className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-pink-500 rounded-full" />
-                    <h3 className="text-xl font-bold text-pink-600">Saúde Emocional</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <textarea 
-                      placeholder="Quais são seus maiores medos hoje?" 
-                      value={anamnese.saudeEmocional_medos}
-                      onChange={(e) => updateAnamnese('saudeEmocional_medos', e.target.value)}
-                      className="w-full bg-slate-50 border border-pink-50 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-pink-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Você sofre com ansiedade, tristeza, culpa, raiva ou angústia?" 
-                      value={anamnese.saudeEmocional_sentimentos}
-                      onChange={(e) => updateAnamnese('saudeEmocional_sentimentos', e.target.value)}
-                      className="w-full bg-slate-50 border border-pink-50 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-pink-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Existe insônia, dores no corpo, tensão, compulsões ou crises emocionais?" 
-                      value={anamnese.saudeEmocional_sintomas}
-                      onChange={(e) => updateAnamnese('saudeEmocional_sintomas', e.target.value)}
-                      className="w-full bg-slate-50 border border-pink-50 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-pink-100 outline-none transition-all" 
-                    />
-                  </div>
-                </section>
-
-                {/* Infância e Adolescência */}
-                <section id="infancia-adolescencia" className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-indigo-700">Infância e Adolescência</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <textarea 
-                      placeholder="Como era sua relação com pai e mãe? (Diálogo, afeto, distância...)" 
-                      value={anamnese.infancia_relacaoPais}
-                      onChange={(e) => updateAnamnese('infancia_relacaoPais', e.target.value)}
-                      className="w-full bg-slate-50 border border-indigo-50 rounded-2xl p-5 min-h-[120px] text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Existiu humilhação, abandono, agressão ou abuso na infância?" 
-                      value={anamnese.infancia_traumas}
-                      onChange={(e) => updateAnamnese('infancia_traumas', e.target.value)}
-                      className="w-full bg-slate-50 border border-indigo-50 rounded-2xl p-5 min-h-[120px] text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="O que mais te machucou emocionalmente na infância?" 
-                      value={anamnese.infancia_magoas}
-                      onChange={(e) => updateAnamnese('infancia_magoas', e.target.value)}
-                      className="w-full bg-slate-50 border border-indigo-50 rounded-2xl p-5 min-h-[120px] text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Como foi sua adolescência? Existiu tristeza, isolamento ou baixa autoestima?" 
-                      value={anamnese.infancia_adolescencia}
-                      onChange={(e) => updateAnamnese('infancia_adolescencia', e.target.value)}
-                      className="w-full bg-slate-50 border border-indigo-50 rounded-2xl p-5 min-h-[120px] text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Relate um fato marcante da infância." 
-                      value={anamnese.infancia_fatoMarcante}
-                      onChange={(e) => updateAnamnese('infancia_fatoMarcante', e.target.value)}
-                      className="w-full bg-slate-50 border border-indigo-50 rounded-2xl p-5 min-h-[120px] text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none transition-all" 
-                    />
-                  </div>
-                </section>
-
-                {/* Autoimagem e Crenças */}
-                <section id="autoimagem-crencas" className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-purple-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-purple-700">Autoimagem e Crenças</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <textarea 
-                      placeholder="O que você pensa sobre você mesma? (Valor pessoal)" 
-                      value={anamnese.crencas_autoimagem}
-                      onChange={(e) => updateAnamnese('crencas_autoimagem', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-purple-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Quais pensamentos negativos mais se repetem?" 
-                      value={anamnese.crencas_negativos}
-                      onChange={(e) => updateAnamnese('crencas_negativos', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-purple-100 outline-none transition-all" 
-                    />
-                    <textarea 
-                      placeholder="Qual a crença mais forte que você carrega sobre amor, dinheiro e relacionamentos?" 
-                      value={anamnese.crencas_fortes}
-                      onChange={(e) => updateAnamnese('crencas_fortes', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 min-h-[100px] text-sm font-medium focus:ring-2 focus:ring-purple-100 outline-none transition-all" 
-                    />
-                  </div>
-                </section>
-
-                {/* Escala Emocional (Interactive Sliders) */}
-                <section id="escala-emocional" className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-purple-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-purple-700">Escala Emocional</h3>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-                    {emocional.map((emocao, index) => (
-                      <div key={index} className="bg-slate-50 rounded-2xl p-5 flex flex-col gap-3 group transition-all hover:bg-white hover:shadow-md border border-transparent hover:border-purple-100">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-slate-700">{emocao.nome}</span>
-                          <span className="text-purple-600 font-black text-lg">{emocao.valor}/10</span>
-                        </div>
-                        <input 
-                          type="range" 
-                          min="0" 
-                          max="10" 
-                          step="1"
-                          value={emocao.valor}
-                          onChange={(e) => atualizarEmocao(index, e.target.value)}
-                          className="w-full accent-purple-600 cursor-pointer" 
-                        />
-                        <div className="flex justify-between text-[8px] font-black uppercase text-slate-400 tracking-widest px-1">
-                          <span>Neutro</span>
-                          <span>Intenso</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Observações Terapêuticas */}
-                <section className="space-y-4 pt-8 border-t border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <Clipboard className="text-purple-600" size={24} />
-                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter uppercase">Observações Terapêuticas</h3>
-                  </div>
-                  <textarea
-                    placeholder="Percepções clínicas, padrões emocionais, comportamentos repetitivos e observações da sessão..."
-                    value={anamnese.observacoes}
-                    onChange={(e) => updateAnamnese('observacoes', e.target.value)}
-                    className="w-full bg-slate-900 border-none rounded-[2rem] p-8 min-h-[250px] text-purple-100 font-medium focus:ring-4 focus:ring-purple-900/10 outline-none transition-all resize-none shadow-2xl placeholder:text-slate-600"
-                  />
-                </section>
-              </div>
+                </div>
+              ))}
             </motion.div>
+          ))}
+
+          {/* =========================
+            MAPA EMOCIONAL COMPLETO
+          ========================= */}
+          <div
+            style={{
+              marginTop: "50px"
+            }}
+          >
+            <h2
+              style={{
+                color: "#9A7B68",
+                fontSize: "34px",
+                fontWeight: "800",
+                marginBottom: "15px",
+                letterSpacing: "2px"
+              }}
+            >
+              MAPA EMOCIONAL
+            </h2>
+
+            <p
+              style={{
+                color: "#B08A78",
+                marginBottom: "35px",
+                fontSize: "16px"
+              }}
+            >
+              Avalie a intensidade emocional de cada área de 0 a 10
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(300px,1fr))",
+                gap: "22px"
+              }}
+            >
+              {emocoes.map((emocao) => (
+                <div
+                  key={emocao}
+                  style={{
+                    background: "#FFFDFB",
+                    border: "1px solid #EAD8CF",
+                    borderRadius: "22px",
+                    padding: "20px",
+                    boxShadow:
+                      "0 6px 20px rgba(0,0,0,0.04)"
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: "12px"
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#8A6B5D",
+                        fontWeight: "700",
+                        fontSize: "14px",
+                        letterSpacing: "1px"
+                      }}
+                    >
+                      {emocao}
+                    </span>
+
+                    <span
+                      style={{
+                        background: "#F5E8DF",
+                        color: "#9B7B68",
+                        padding: "4px 10px",
+                        borderRadius: "10px",
+                        fontWeight: "700",
+                        fontSize: "13px"
+                      }}
+                    >
+                      {emocional?.[emocao] || 0}/10
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={emocional?.[emocao] || 0}
+                    onChange={(e) =>
+                      setEmocional({
+                        ...emocional,
+                        [emocao]: Number(e.target.value)
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      accentColor: "#B08A78",
+                      cursor: "pointer"
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+          {/* =========================
+            FINALIZAÇÃO
+          ========================= */}
+          <div
+            style={{
+              marginTop: "60px",
+              padding: "45px",
+              borderRadius: "30px",
+              background: "#F8F3EF",
+              textAlign: "center",
+              border: "1px solid #E7D8CF"
+            }}
+          >
+            <h2
+              style={{
+                color: "#9A7B68",
+                marginBottom: "25px",
+                fontSize: "32px",
+                fontWeight: "600"
+              }}
+            >
+              Mensagem de Acolhimento
+            </h2>
+
+            <p
+              style={{
+                color: "#7B6255",
+                fontSize: "22px",
+                lineHeight: "1.9",
+                maxWidth: "900px",
+                margin: "0 auto"
+              }}
+            >
+              “Muitas vezes os traumas silenciosos deixam marcas profundas,
+              mas nenhuma dor define quem você é.
+              Existe cura para aquilo que por anos tentou sobreviver escondido dentro de você.”
+            </p>
+
+            <div
+              style={{
+                marginTop: "40px",
+                color: "#B08A78",
+                fontStyle: "italic",
+                fontSize: "22px",
+                lineHeight: "1.8"
+              }}
+            >
+              “Porque sou eu que conheço os planos que tenho para vocês,
+              diz o Senhor, planos de fazê-los prosperar e não de lhes causar dano,
+              planos de dar-lhes esperança e um futuro.”
+              
+              <br /><br />
+
+              <strong>Jeremias 29:11</strong>
+            </div>
+          </div>
+
+          {/* =========================
+            BOTÃO FINAL
+          ========================= */}
+          <div className="pb-20">
+            <button
+              onClick={enviarWhatsApp}
+              style={{
+                width: "100%",
+                marginTop: "50px",
+                padding: "24px",
+                border: "none",
+                borderRadius: "22px",
+                background:
+                  "linear-gradient(135deg,#B08A78,#8D6E63)",
+                color: "#fff",
+                fontSize: "20px",
+                fontWeight: "800",
+                cursor: "pointer",
+                boxShadow:
+                  "0 12px 30px rgba(0,0,0,0.12)",
+                transition: "0.3s"
+              }}
+            >
+              SALVAR E ENVIAR AVALIAÇÃO 💜
+            </button>
           </div>
         </div>
+
       </div>
 
-      <footer className="max-w-6xl mx-auto mt-12 pb-12 text-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
-        NeuroInsight Diagnostics • Protocolo de Anamnese TRG • v4.2
+      <footer className="max-w-6xl mx-auto mt-12 pb-12 text-center text-[12px] font-black uppercase tracking-[0.4em] text-therapist-accent">
+        Miss. Daiane • Terapeuta Emocional • Protocolo de Avaliação
       </footer>
 
       <style>{`
@@ -474,25 +826,27 @@ export default function MentalBlocksDashboard() {
         }
         input[type='range']::-webkit-slider-runnable-track {
           width: 100%;
-          height: 6px;
+          height: 8px;
           cursor: pointer;
-          background: #f1f5f9;
+          background: #eadfd7;
           border-radius: 10px;
         }
         input[type='range']:focus::-webkit-slider-runnable-track {
-          background: #e2e8f0;
+          background: #e2d3ca;
         }
         input[type='range']::-webkit-slider-thumb {
-          height: 20px;
-          width: 20px;
+          height: 24px;
+          width: 24px;
           border-radius: 50%;
-          background: #9333ea;
+          background: #b89d8b;
           cursor: pointer;
           -webkit-appearance: none;
-          margin-top: -7px;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          margin-top: -8px;
+          box-shadow: 0 4px 12px rgba(184, 157, 139, 0.4);
+          border: 2px solid white;
         }
       `}</style>
     </div>
   );
 }
+
