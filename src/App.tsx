@@ -191,5 +191,4 @@ const botao = {
   fontSize: '18px',
   cursor: 'pointer'
 }
-
 export default App
