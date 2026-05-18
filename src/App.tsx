@@ -193,4 +193,3 @@ const botao = {
 }
 
 export default App
-
